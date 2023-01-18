@@ -93,7 +93,13 @@ def get_tweets(url,headers):
     Returns a Json format data where you can find Tweet id, text and some metadata.
     Sends the data to your defined local port where Spark reads streaming data.
     """
-    get_response = requests.get(url=url,headers=headers,stream=True)
+    params = {
+                    'tweet.fields':'geo,lang',
+                    'user.fields':'username', 
+                    'expansions':'geo.place_id,author_id'
+                    }
+    
+    get_response = requests.get(url=url,headers=headers,stream=True,params=params)
 
 
     if get_response.status_code!=200:
@@ -105,19 +111,17 @@ def get_tweets(url,headers):
                 pass
             else:
                 json_response = json.loads(line)  #json.loads----->Deserialize fp (a .read()-supporting text file or binary file containing a JSON document) to a Python object using this conversion table.ie json to python object 
-                tweet_id = json_response["data"]["id"]
-                params = {
-                    'tweet.fields':'geo,lang',
-                    'user.fields':'id,username,name', 
-                    'expansions':'geo.place_id,author_id'
-                    }
-                tweet_lookup = requests.get(url=tweet_lookup_endpoint + tweet_id, headers=headers, params=params)
-                try:
-                    tweet_lookup_str = str(tweet_lookup.json()["data"]) + "\n"
-                    print(tweet_lookup_str)
-                    conn.send(bytes(tweet_lookup_str,'utf-8'))
-                except Exception as e:
-                    print("Querry_Error------------------------------------------------")
+                # tweet_id = json_response["data"]["id"]
+                print(json_response)
+                # print(json.dumps(json_response, indent=4, sort_keys=True))
+                json_response_str = str(json_response["data"]) + "\n"
+                conn.send(bytes(json_response_str,'utf-8'))
+                # try:
+                #     tweet_lookup_str = str(tweet_lookup.json()["data"]) + "\n"
+                #     print(tweet_lookup_str)
+                #     conn.send(bytes(tweet_lookup_str,'utf-8'))
+                # except Exception as e:
+                #     print("Querry_Error------------------------------------------------")
 
 if __name__ == "__main__":
 
